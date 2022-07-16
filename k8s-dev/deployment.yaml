@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: email
+  name: email-worker
+  namespace: ikomida-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      containers:
+        - image: hub.docker.internal:5000/ikomida/email-worker-image:latest
+          name: email-worker
+          env:
+            - name: ENV
+              value: "DEV"
+            - name: MAILJET_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: mailjetApikey
+                  optional: false
+            - name: MAILJET_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: mailjetSecretkey
+                  optional: false
+            - name: DBUSER
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: DBUSER
+            - name: DBPASS
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: DBPASS
+            - name: DBNAME
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: DBNAME
+            - name: DBHOST
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: DBHOST
+            - name: DBPORT
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: DBPORT
+            - name: MQUSER
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: MQUSER
+            - name: MQPASS
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: MQPASS
+            - name: MQVHOST
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: MQVHOST
+            - name: PROJID
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: PROJID

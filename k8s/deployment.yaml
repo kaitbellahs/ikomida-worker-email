@@ -78,3 +78,9 @@ spec:
                 secretKeyRef:
                   name: environment
                   key: PROJID
+            - name: GOOGLEADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: environment
+                  key: googleAdmin
+                  optional: false

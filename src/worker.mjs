@@ -19,19 +19,23 @@ name = name
     .replace(/^(@\S+\/)?(svelte-)?(\S+)/, '$3')
     .replace(/^\w/, m => m.toUpperCase())
     .replace(/-\w/g, m => m[1].toUpperCase());
-const logger = Logger.getInstance(name, process.env?.ENV !== 'PROD');
 
 class EmailWorker {
 
     googleAdmin;
     amqp;
     provider;
+    logger
+
+    constructor(){
+        this.logger = Logger.getInstance(name, process.env?.ENV !== 'PROD')
+    }
 
     //TODO: -- report errors
     async run() {
         try {
-            this.amqp = new RabbitMQ(logger);
-            this.provider = new GateWays.Mailjet();
+            this.amqp = new RabbitMQ(this.logger);
+            this.provider = new GateWays.Mailjet(this.logger);
             // await this.sendEmail({
             //     email: "kaitbellahs@gmail.com",
             //     name: "khalid"
@@ -41,13 +45,13 @@ class EmailWorker {
             //   }, "Greetings from Mailjet.", "My first Mailjet email", "<h3>Dear passenger 1, welcome to <a href='https://www.mailjet.com/'>Mailjet</a>!</h3><br />May the delivery force be with you!")
             await this.amqp.listenToMessages(RabbitMQ.EMAIL_SEVERITY, this.processMessages.bind(this));
         } catch (error) {
-            console.error(error);
+            this.logger.error(error);
         }
     }
 
     async processMessages(message, channel) {
         try {
-            console.log(" [x] %s: message received: '%s'", message.fields.routingKey, message.content.toString('utf8'));
+            this.logger.log(" [x] %s: message received: '%s'", message.fields.routingKey, message.content.toString('utf8'));
             const messageObject = JSON.parse(message.content.toString('utf8'));
             if (messageObject.method === 'send') {
                 for (let i = 1; i < 4; i++) {
@@ -59,7 +63,7 @@ class EmailWorker {
 
             }
         } catch (error) {
-            console.error(error);
+            this.logger.error(error);
         } finally {
             channel.ack(message);
         }
@@ -68,7 +72,7 @@ class EmailWorker {
     async sendEmail(object) {
         try {
             if (!this.validateObject(object)) {
-                console.error("\nobject have not suficiente params\n", object);
+                this.logger.error("\nobject have not suficiente params\n", object);
                 return false;
             }
             const result = await this.provider
@@ -92,9 +96,8 @@ class EmailWorker {
             if (typeof result === 'boolean' && result) {
                 return true;
             }
-            console.log(result)
         } catch (exception) {
-            console.error(exception);
+            this.logger.error(exception);
         }
         return false;
     }

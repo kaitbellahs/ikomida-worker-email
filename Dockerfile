@@ -2,6 +2,7 @@ FROM node:16-alpine AS build
 
 ARG PORT=80
 ARG GITHUBPRIVATEKEY
+ARG CACHEBUST
 
 ENV NODE_ENV production
 ENV NODEPORT ${PORT}
@@ -17,7 +18,7 @@ WORKDIR /home/node/app
 COPY --chown=node:node package.json process.yml ./
 COPY --chown=node:node ./src ./src
 
-RUN npm i --omit=dev npm@latest pm2 && npm update
+RUN yarn add pm2 --prod
 
 FROM node:16-alpine AS final
 
@@ -29,4 +30,4 @@ WORKDIR /home/node/app
 EXPOSE ${PORT}
 
 # ENTRYPOINT ["pm2-runtime", "./process.yml"] 
-ENTRYPOINT ["npm", "run", "start"] 
+ENTRYPOINT ["yarn", "start"] 

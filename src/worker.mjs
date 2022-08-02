@@ -35,13 +35,6 @@ class EmailWorker {
         try {
             this.amqp = new RabbitMQ(this.logger)
             this.provider = new GateWays.Mailjet(this.logger)
-            // await this.sendEmail({
-            //     email: "kaitbellahs@gmail.com",
-            //     name: "khalid"
-            //   }, {
-            //     email: "kaitbellahs@gmail.com",
-            //     name: "khalid"
-            //   }, "Greetings from Mailjet.", "My first Mailjet email", "<h3>Dear passenger 1, welcome to <a href='https://www.mailjet.com/'>Mailjet</a>!</h3><br />May the delivery force be with you!")
             await this.amqp.listenToMessages(RabbitMQ.EMAIL_SEVERITY, this.processMessages.bind(this))
         } catch (error) {
             this.logger.error(error)
@@ -52,19 +45,24 @@ class EmailWorker {
         try {
             this.logger.log(` [x] ${message.fields.routingKey}: message received: '${message.content.toString('utf8')}'`)
             const messageObject = JSON.parse(message.content.toString('utf8'))
-            if (messageObject.method === 'send') {
+            if (messageObject?.method === 'send') {
                 for (let i = 1; i < 4; i++) {
-                    if (this.sendEmail(messageObject?.object)) {
-                        break;
+                    if (await this.sendEmail(messageObject?.object)) {
+                        this.logger.log(` [x] Email enviado com sucesso`)
+                        channel.ack(message)
+                        return true
                     }
                     await this.sleep(i * 1000)
                 }
+                
+                this.logger.log(` [x] o email não foi enviado apos ${i} tentativas!`)
+            } else {
+                this.logger.log(` [x] metodo: ${messageObject?.method} não suportado!`)
             }
         } catch (error) {
             this.logger.error(error)
-        } finally {
-            channel.ack(message)
         }
+        return false
     }
 
     async sendEmail(object) {

@@ -4,9 +4,9 @@ import {
     objHasProp,
     RabbitMQ,
     GateWays,
-    Logger
+    Logger,
+    System
 } from 'ikomida-shared';
-import Mailjet from 'node-mailjet';
 import {
     createRequire
 } from "module";
@@ -52,7 +52,7 @@ class EmailWorker {
                         channel.ack(message)
                         return true
                     }
-                    await this.sleep(i * 1000)
+                    await System.sleep(i * 1000)
                 }
 
                 this.logger.log(` [x] o email não foi enviado apos ${i} tentativas!`)
@@ -80,10 +80,6 @@ class EmailWorker {
             this.logger.error(exception)
         }
         return false;
-    }
-
-    async sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms))
     }
 
     validateObject(object) {

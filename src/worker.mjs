@@ -35,7 +35,7 @@ class EmailWorker {
         try {
             this.amqp = new RabbitMQ(this.logger)
             this.provider = new GateWays.Mailjet(this.logger)
-            await this.amqp.listenToMessages(RabbitMQ.EMAIL_SEVERITY, this.processMessages.bind(this))
+            await this.amqp.listenToMessages(RabbitMQ.EMAIL_QUEUE, this.processMessages.bind(this))
         } catch (error) {
             this.logger.error(error)
         }
@@ -54,7 +54,7 @@ class EmailWorker {
                     }
                     await this.sleep(i * 1000)
                 }
-                
+
                 this.logger.log(` [x] o email não foi enviado apos ${i} tentativas!`)
             } else {
                 this.logger.log(` [x] metodo: ${messageObject?.method} não suportado!`)

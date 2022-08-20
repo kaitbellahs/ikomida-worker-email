@@ -55,7 +55,7 @@ class EmailWorker {
                     await System.sleep(i * 1000)
                 }
 
-                this.logger.log(` [x] o email não foi enviado apos ${i} tentativas!`)
+                this.logger.log(` [x] o email não foi enviado após ${i} tentativas!`)
             } else {
                 this.logger.log(` [x] metodo: ${messageObject?.method} não suportado!`)
             }

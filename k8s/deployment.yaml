@@ -6,7 +6,7 @@ metadata:
   name: email-worker
   namespace: ikomida-worker
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: email
@@ -25,6 +25,11 @@ spec:
           name: email-worker
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - all
+            privileged: false
+            readOnlyRootFilesystem: true
           env:
             - name: ENV
               value: "PROD"

@@ -1,12 +1,5 @@
-#!/usr/bin/env node
-
-import {
-    objHasProp,
-    RabbitMQ,
-    GateWays,
-    Logger,
-    System
-} from 'ikomida-shared';
+import { Domain, GateWays, objHasProp, Types, Utils } from '@ikomida/shared-backend';
+import { Message, Channel } from 'amqplib';
 import {
     createRequire
 } from "module";
@@ -17,62 +10,63 @@ let {
 } = require("../package.json")
 name = name
     .replace(/^(@\S+\/)?(svelte-)?(\S+)/, '$3')
-    .replace(/^\w/, m => m.toUpperCase())
-    .replace(/-\w/g, m => m[1].toUpperCase())
+    .replace(/^\w/, (m: string) => m.toUpperCase())
+    .replace(/-\w/g, (m: string[]) => m[1].toUpperCase())
 
 class EmailWorker {
-
-    googleAdmin;
-    amqp;
-    provider;
-    logger
+    amqp?: Domain.RabbitMQ;
+    provider?: GateWays.Mailjet;
+    logger: Utils.Logger
 
     constructor() {
-        this.logger = Logger.getInstance(name)
+        this.logger = Utils.Logger.getInstance(name)
     }
 
     async run() {
         try {
-            this.amqp = new RabbitMQ(this.logger)
+            this.amqp = new Domain.RabbitMQ(this.logger)
             this.provider = new GateWays.Mailjet(this.logger)
-            await this.amqp.listenToMessages(RabbitMQ.EMAIL_QUEUE, this.processMessages.bind(this))
-        } catch (error) {
+            await this.amqp.listenToMessages(Domain.RabbitMQ.EMAIL_QUEUE, this.processMessages.bind(this))
+        } catch (error: any) {
             this.logger.error(error)
         }
     }
 
-    async processMessages(message, channel) {
+    async processMessages(message: Message, channel: Channel) {
         try {
             this.logger.log(` [x] ${message.fields.routingKey}: message received: '${message.content.toString('utf8')}'`)
-            const messageObject = JSON.parse(message.content.toString('utf8'))
+            const messageObject = JSON.parse(message.content.toString('utf8') ?? '{}') as Types.Interfaces.IAMQPPayload<Types.Interfaces.IEmail>
             if (messageObject?.method === 'send') {
-                for (let i = 1; i < 4; i++) {
-                    if (await this.sendEmail(messageObject?.object)) {
+                let n = 0;
+                const startTime = new Date().getTime();
+                let i = 0;
+                for (i = 1; i <= 5; i++) {
+                    if (await this.sendEmail(messageObject?.object as Types.Interfaces.IEmail)) {
                         this.logger.log(` [x] Email enviado com sucesso`)
                         channel.ack(message)
                         return true
                     }
-                    await System.sleep(i * 1000)
+                    n += i;
+                    await Utils.System.sleep(n * 4000);
                 }
-
-                this.logger.log(` [x] o email não foi enviado após ${i} tentativas!`)
+                this.logger.error(`[x] o email não foi enviado após ${i} tentativas em ${(startTime - new Date().getTime()) / 1000}s.`);
             } else {
                 this.logger.log(` [x] metodo: ${messageObject?.method} não suportado!`)
             }
-        } catch (error) {
+        } catch (error: any) {
             this.logger.error(error)
         }
         return false
     }
 
-    async sendEmail(object) {
+    async sendEmail(object: Types.Interfaces.IEmail) {
         try {
             if (!this.validateObject(object)) {
                 this.logger.error("\nobject have not suficiente params\n", object)
                 return false;
             }
             const result = await this.provider
-                .send(object)
+                ?.send(object)
             if (typeof result === 'boolean' && result) {
                 return true;
             }
@@ -82,7 +76,7 @@ class EmailWorker {
         return false;
     }
 
-    validateObject(object) {
+    validateObject(object: any) {
         return objHasProp(["from", "to", "message"], object) && objHasProp(["email", "name"], object?.from) && objHasProp(["email", "name"], object?.to) && objHasProp(["subject", "body"], object?.message)
     }
 }

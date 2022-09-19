@@ -20,6 +20,13 @@ docker build -t us-central1-docker.pkg.dev/ikomida-prod/docker/email-worker-imag
 ThrowOnNativeFailure
 docker push us-central1-docker.pkg.dev/ikomida-prod/docker/email-worker-image:latest
 ThrowOnNativeFailure
-kubectl -n ikomida delete deploy email-worker
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl -n ikomida-worker delete deploy email-worker
+$prod = $false
+if($args.count -gt 1){
+    $prod=$args[1]==="prod"
+}
+if($prod){
+kubectl apply -f k8s
+}else{
+kubectl apply -f k8s-dev
+}

@@ -35,13 +35,13 @@ class EmailWorker {
     async processMessages(message: Message, channel: Channel) {
         try {
             this.logger.log(` [x] ${message.fields.routingKey}: message received: '${message.content.toString('utf8')}'`)
-            const messageObject = JSON.parse(message.content.toString('utf8') ?? '{}') as Types.Interfaces.IAMQPPayload<Types.Interfaces.IEmail>
+            const messageObject: Types.Classes.CAMQPPayload<Types.Classes.CEmail> = Types.Classes.CAMQPPayload.fromObject(JSON.parse(message.content.toString('utf8') ?? '{}'))
             if (messageObject?.method === 'send') {
                 let n = 0;
                 const startTime = new Date().getTime();
                 let i = 0;
                 for (i = 1; i <= 5; i++) {
-                    if (await this.sendEmail(messageObject?.object as Types.Interfaces.IEmail)) {
+                    if (await this.sendEmail(Types.Classes.CEmail.fromObject(messageObject?.object))) {
                         this.logger.log(` [x] Email enviado com sucesso`)
                         channel.ack(message)
                         return true
@@ -59,9 +59,9 @@ class EmailWorker {
         return false
     }
 
-    async sendEmail(object: Types.Interfaces.IEmail) {
+    async sendEmail(object: Types.Classes.CEmail) {
         try {
-            if (!this.validateObject(object)) {
+            if (!object.validate() || !this.validateObject(object)) {
                 this.logger.error("\nobject have not suficiente params\n", object)
                 return false;
             }

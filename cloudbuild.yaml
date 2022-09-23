@@ -28,7 +28,7 @@ steps:
         "image",
         "deployment",
         "email-worker",
-        "email-worker=us-central1-docker.pkg.dev/ikomida-prod/docker/email-worker-image:$TAG_NAME",
+        "email-worker=us-central1-docker.pkg.dev/ikomida-dev/docker/email-worker-image:$TAG_NAME",
       ]
     env:
       - "CLOUDSDK_COMPUTE_ZONE=us-central1-b"

@@ -31,7 +31,7 @@
     "author": "Khalid Ait Bellahs",
     "license": "UNLICENSED",
     "dependencies": {
-        "@ikomida/shared-backend": "^0.0.228"
+        "@ikomida/shared-backend": "^0.0.233"
     },
     "devDependencies": {
         "@microsoft/api-extractor": "^7.31.2",

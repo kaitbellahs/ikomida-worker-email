@@ -49,6 +49,7 @@ class EmailWorker {
         this.logger.error(
           `[x] o email não foi enviado após ${i} tentativas em ${(startTime - new Date().getTime()) / 1000}s.`
         )
+        channel.ack(message)
       } else {
         this.logger.log(` [x] metodo: ${messageObject?.method} não suportado!`)
         channel.ack(message)

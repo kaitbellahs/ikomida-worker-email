@@ -37,8 +37,9 @@ class EmailWorker {
         let n = 0
         const startTime = new Date().getTime()
         let i = 0
+        const payload = Types.Classes.CEmail.fromObject(messageObject?.object)
         for (i = 1; i <= 5; i++) {
-          if (await this.sendEmail(Types.Classes.CEmail.fromObject(messageObject?.object))) {
+          if (await this.sendEmail(payload)) {
             this.logger.log(` [x] Email enviado com sucesso`)
             channel.ack(message)
             return true

@@ -63,11 +63,11 @@ class EmailWorker {
 
   async sendEmail(object: Types.Classes.CEmail) {
     try {
-      if (!object.validate() || !this.validateObject(object)) {
-        this.logger.error('\nobject have not suficiente params\n', object)
+      if (!object.validate() || !this.validateObject(object.toJSON())) {
+        this.logger.error('\nobject have not suficiente params\n', object.toJSON())
         return false
       }
-      const result = await this.provider?.send(object)
+      const result = await this.provider?.send(object.toJSON())
       if (typeof result === 'boolean' && result) {
         return true
       }

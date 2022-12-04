@@ -20,7 +20,7 @@ export default [
         ],
         plugins: [
             autoExternal(),
-            tsPlugin(tsconfig),
+            tsPlugin(),
             resolve({
                 preferBuiltins: true
             }),
